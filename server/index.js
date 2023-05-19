@@ -1,6 +1,11 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const fileupload = require("express-fileupload");
+const path = require('path');
+
 const app = express(); 
+app.use(fileupload());
+const assetFolder = path.join(__dirname, "assets")
 
 dotenv.config();
 
@@ -14,13 +19,20 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 app.post("/applyJob", (req, res) => {
-    console.log(req.body);
-  const { firstName, email, phone, experience, location, resume } = req.body;
+  console.log(req.files);
+
+  const profile = req.files;
+
+  profile.mv(path.join(assetFolder, profile.name))
+
+  const { firstName, lastName, email, phone, experience, location, resume } = req.body;
   if (!firstName || !email || !phone || !experience || !location || !resume) {
     return res.status(422).json({ error: "Can not use empty field" });
   } else {
     // create document for user
+    console.log(req.body);
     const user = new User({
+      lastName,
       firstName,
       email,
       phone,
