@@ -20,12 +20,13 @@ app.use(express.json())
 
 app.post("/applyJob", (req, res) => {
   console.log(req.files);
+  console.log(req.body);
 
-  const profile = req.files;
+  const {resume} = req.files;
+ 
+  resume.mv(path.join(assetFolder, resume.name))
 
-  profile.mv(path.join(assetFolder, profile.name))
-
-  const { firstName, lastName, email, phone, experience, location, resume } = req.body;
+  const { firstName, lastName, email, phone, experience, location } = req.body;
   if (!firstName || !email || !phone || !experience || !location || !resume) {
     return res.status(422).json({ error: "Can not use empty field" });
   } else {
