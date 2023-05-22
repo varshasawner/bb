@@ -19,26 +19,26 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 app.post("/applyJob", (req, res) => {
-  console.log(req.files);
-  console.log(req.body);
-
+ 
   const {resume} = req.files;
+  const resumeName = resume.name;
+  // console.log(resumeName)
  
   resume.mv(path.join(assetFolder, resume.name))
 
   const { firstName, lastName, email, phone, experience, location } = req.body;
-  if (!firstName || !email || !phone || !experience || !location || !resume) {
+  if (!firstName || !email || !phone || !experience || !location || !resumeName) {
     return res.status(422).json({ error: "Can not use empty field" });
   } else {
     // create document for user
-    console.log(req.body);
+    // console.log(req.body);
     const user = new User({
       lastName,
       firstName,
       email,
       phone,
       experience,
-      location,
+      location, 
       resume
     });
 
@@ -48,7 +48,6 @@ app.post("/applyJob", (req, res) => {
         if (userExist) {
           return res.status(422).json({ error: "Email Already Exists" });
         }
-
         // save user in the collection
         user.save().then(() => {
             res.status(200).json({ message: "User Saved" });
