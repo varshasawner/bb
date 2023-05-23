@@ -12,12 +12,17 @@ dotenv.config();
 const port = process.env.PORT;
 require("./db/conn.js");
 const User = require("./model/userSchema");
+const Contact = require("./model/contactSchema");
 
 app.use(express.urlencoded({ extended: false }))
      
 // parse application/json
 app.use(express.json())
 
+
+
+// Job Description API-----------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------
 app.post("/applyJob", (req, res) => {
  
   const {resume} = req.files;
@@ -28,7 +33,7 @@ app.post("/applyJob", (req, res) => {
 
   const { firstName, lastName, email, phone, experience, location } = req.body;
   if (!firstName || !email || !phone || !experience || !location || !resumeName) {
-    return res.status(422).json({ error: "Can not use empty field" });
+    return res.status(422).json({ message: "Can not use empty field" });
   } else {
     // create document for user
     // console.log(req.body);
@@ -39,21 +44,21 @@ app.post("/applyJob", (req, res) => {
       phone,
       experience,
       location, 
-      resume
+      resume:resumeName
     });
 
     User.findOne({ email: email })
       .then((userExist) => {
         // checking user exists of not in DB
         if (userExist) {
-          return res.status(422).json({ error: "Email Already Exists" });
+          return res.status(422).json({ message: "Email Already Exists" });
         }
         // save user in the collection
         user.save().then(() => {
             res.status(200).json({ message: "User Saved" });
           })
           .catch((err) =>
-            res.status(500).json({ Error: "Failed to Register" })
+            res.status(500).json({ message: "Failed to Register" })
           );
       })
       .catch((err) => {
@@ -61,6 +66,46 @@ app.post("/applyJob", (req, res) => {
       });
   }
 });
+
+
+// contact form API ------------------------------------------------------------------
+// -----------------------------------------------------------------------------------
+app.post('/contact', (req, res)=>{
+  // console.log(req.body);
+
+  const {fullName, email, companyName, companyLocation, phone, budget, aboutProject} = req.body;
+  if (!fullName || !email || !companyName || !companyLocation || !phone || !budget || !aboutProject){
+    return res.status(422).json({"message" : "Can Not Save Empty Fields"})
+  }else{
+    const contact = new Contact({
+      fullName,
+      email,
+      phone,
+      companyName,
+      companyLocation, 
+      budget,
+      aboutProject
+    });
+    Contact.findOne({ email: email })
+    .then((contactExist) => {
+      // checking user exists of not in DB
+      if (contactExist) {
+        return res.status(422).json({ message: "Email Already Exists" });
+      }
+      // save user in the collection
+      contact.save().then(() => {
+          res.status(200).json({ message: "Contact Saved" });
+        })
+        .catch((err) =>
+          res.status(500).json({ message: "Failed to Register" })
+        );
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+})
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
