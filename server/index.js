@@ -11,9 +11,11 @@ dotenv.config();
 
 const port = process.env.PORT;
 require("./db/conn.js");
-const User = require("./model/userSchema");
-const Contact = require("./model/contactSchema");
-const ContactHome = require("./model/contactHomeSchema");
+const User = require("./model/userSchema.js");
+const Contact = require("./model/contactSchema.js");
+const ContactHome = require("./model/contactHomeSchema.js");
+const Courses = require("./model/coursesSchema.js");
+const Job = require("./model/jobSchema.js");
 
 app.use(express.urlencoded({ extended: false }))
      
@@ -25,18 +27,20 @@ app.use(express.json())
 // ------------------------------------------------------------------------------------------
 app.post("/applyJob", (req, res) => {
  
+  if(!req.files){
+    return res.status(422).json({ error: "Can not use empty field" });
+  }
   const {resume} = req.files;
   const resumeName = resume.name;
   // console.log(resumeName)
  
-  resume.mv(path.join(assetFolder, resume.name))
-
   const { firstName, lastName, email, phone, experience, location } = req.body;
   if (!firstName || !email || !phone || !experience || !location || !resumeName) {
-    return res.status(422).json({ message: "Can not use empty field" });
+    return res.status(422).json({ error: "Can not use empty field" });
   } else {
     // create document for user
     // console.log(req.body);
+    resume.mv(path.join(assetFolder, resume.name))
     const user = new User({
       lastName,
       firstName,
@@ -51,14 +55,14 @@ app.post("/applyJob", (req, res) => {
       .then((userExist) => {
         // checking user exists of not in DB
         if (userExist) {
-          return res.status(422).json({ message: "Email Already Exists" });
+          return res.status(422).json({ error: "Email Already Exists" });
         }
         // save user in the collection
         user.save().then(() => {
             res.status(200).json({ message: "User Saved" });
           })
           .catch((err) =>
-            res.status(500).json({ message: "Failed to Register" })
+            res.status(422).json({ error: "Failed to Register" })
           );
       })
       .catch((err) => {
@@ -75,7 +79,7 @@ app.post('/contact', (req, res)=>{
 
   const {fullName, email, companyName, companyLocation, phone, budget, aboutProject} = req.body;
   if (!fullName || !email || !companyName || !companyLocation || !phone || !budget || !aboutProject){
-    return res.status(422).json({"message" : "Can Not Save Empty Fields"})
+    return res.status(422).json({error : "Can Not Save Empty Fields"})
   }else{
     const contact = new Contact({
       fullName,
@@ -90,14 +94,14 @@ app.post('/contact', (req, res)=>{
     .then((contactExist) => {
       // checking user exists of not in DB
       if (contactExist) {
-        return res.status(422).json({ message: "Email Already Exists" });
+        return res.status(422).json({ error: "Email Already Exists" });
       }
       // save user in the collection
       contact.save().then(() => {
           res.status(200).json({ message: "Contact Saved" });
         })
         .catch((err) =>
-          res.status(500).json({ message: "Failed to Register" })
+          res.status(500).json({ error: "Failed to Register" })
         );
     })
     .catch((err) => {
@@ -114,7 +118,7 @@ app.post('/contactHome', (req, res)=>{
 
   const {fullName, email, message} = req.body;
   if (!fullName || !email || !message){
-    return res.status(422).json({"message" : "Can Not Save Empty Fields"})
+    return res.status(422).json({error : "Can Not Save Empty Fields"})
   }else{
     const contactHome = new ContactHome({
       fullName,
@@ -125,19 +129,42 @@ app.post('/contactHome', (req, res)=>{
     .then((contactExist) => {
       // checking user exists of not in DB
       if (contactExist) {
-        return res.status(422).json({ message: "Email Already Exists" });
+        return res.status(422).json({ error: "Email Already Exists" });
       }
       // save user in the collection
       contactHome.save().then(() => {
           res.status(200).json({ message: "Contact Saved" });
         })
         .catch((err) =>
-          res.status(500).json({ message: "Failed to Register" })
+          res.status(500).json({ error: "Failed to Register" })
         );
     })
     .catch((err) => {
       console.log(err);
     });
+  }
+})
+
+
+// Get Courses API-------------------------------------------------------
+// -----------------------------------------------------------------------
+app.get('/courses', async(req, res)=>{
+  const courses = await Courses.find();
+  if(courses.length < 1){
+    res.status(500).send({error : "No Course Found"});
+  }else{
+    res.status(200).send(courses);
+  }
+})
+
+
+// Job Data API----------------------------------------------------
+app.get('/job', async(req, res)=>{
+  const jobs = await Job.find();
+  if(jobs.length < 1){
+    res.status(500).send({error : "No Job Found"});
+  }else{
+    res.status(200).send(jobs);
   }
 })
 
