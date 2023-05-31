@@ -26,7 +26,7 @@ app.use(express.json())
 // Job Description API-----------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------
 app.post("/applyJob", (req, res) => {
- 
+  // console.log(req.body);
   if(!req.files){
     return res.status(422).json({ error: "Can not use empty field" });
   }
@@ -34,10 +34,12 @@ app.post("/applyJob", (req, res) => {
   const resumeName = resume.name;
   // console.log(resumeName)
  
-  const { firstName, lastName, email, phone, experience, location } = req.body;
-  if (!firstName || !email || !phone || !experience || !location || !resumeName) {
+  const { firstName, lastName, email, phone, experience, location, captcha, captchaText } = req.body;
+  if (!firstName || !email || !phone || !experience || !location || !resumeName || !captchaText) {
     return res.status(422).json({ error: "Can not use empty field" });
-  } else {
+  } else if(captcha !== captchaText){
+    return res.status(422).json({ error: "Wrong Captcha !" });
+  }else {
     // create document for user
     // console.log(req.body);
     resume.mv(path.join(assetFolder, resume.name))
@@ -77,9 +79,11 @@ app.post("/applyJob", (req, res) => {
 app.post('/contact', (req, res)=>{
   // console.log(req.body);
 
-  const {fullName, email, companyName, companyLocation, phone, budget, aboutProject} = req.body;
-  if (!fullName || !email || !companyName || !companyLocation || !phone || !budget || !aboutProject){
+  const {fullName, email, companyName, companyLocation, phone, budget, aboutProject, captcha, captchaText} = req.body;
+  if (!fullName || !email || !companyName || !companyLocation || !phone || !budget || !aboutProject || !captchaText){
     return res.status(422).json({error : "Can Not Save Empty Fields"})
+  }else if(captcha !== captchaText){
+    return res.status(422).json({ error: "Wrong Captcha !" });
   }else{
     const contact = new Contact({
       fullName,
@@ -116,9 +120,11 @@ app.post('/contact', (req, res)=>{
 app.post('/contactHome', (req, res)=>{
   console.log(req.body);
 
-  const {fullName, email, message} = req.body;
-  if (!fullName || !email || !message){
+  const {fullName, email, message, captchaText, captcha} = req.body;
+  if (!fullName || !email || !message || !captchaText){
     return res.status(422).json({error : "Can Not Save Empty Fields"})
+  }else if(captcha !== captchaText){
+    return res.status(422).json({ error: "Wrong Captcha !" });
   }else{
     const contactHome = new ContactHome({
       fullName,
